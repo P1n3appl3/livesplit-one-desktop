@@ -6,6 +6,7 @@ mod stream_markers;
 
 use crate::{config::Config, renderer::Renderer};
 use livesplit_core::{
+    auto_splitting,
     layout::{self, Layout, LayoutSettings, LayoutState},
     run::parser::composite,
     HotkeySystem, Timer,
@@ -29,6 +30,9 @@ fn main() {
     config.configure_timer(&mut timer.write());
 
     let mut markers = config.build_marker_client();
+
+    let auto_splitter = auto_splitting::Runtime::new(timer.clone());
+    config.maybe_load_auto_splitter(&auto_splitter);
 
     let mut hotkey_system = HotkeySystem::new(timer.clone()).unwrap();
     config.configure_hotkeys(&mut hotkey_system);

@@ -2,6 +2,7 @@ use {
     crate::stream_markers,
     image::{png::PngDecoder, ImageDecoder},
     livesplit_core::{
+        auto_splitting,
         layout::{self, Layout, LayoutSettings},
         run::{parser::composite, saver::livesplit::save_timer},
         HotkeyConfig, HotkeySystem, Run, Segment, Timer, TimingMethod,
@@ -39,6 +40,7 @@ struct General {
     layout: Option<PathBuf>,
     timing_method: Option<TimingMethod>,
     comparison: Option<String>,
+    auto_splitter: Option<PathBuf>,
 }
 
 #[derive(Default, Deserialize)]
@@ -104,6 +106,14 @@ impl Config {
 
     pub fn is_game_time(&self) -> bool {
         self.general.timing_method == Some(TimingMethod::GameTime)
+    }
+
+    pub fn maybe_load_auto_splitter(&self, runtime: &auto_splitting::Runtime) {
+        if let Some(auto_splitter) = &self.general.auto_splitter {
+            if let Ok(buf) = fs::read(auto_splitter) {
+                runtime.load_script(buf).ok();
+            }
+        }
     }
 
     pub fn parse_layout(&self) -> Option<Layout> {
