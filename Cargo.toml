@@ -10,9 +10,17 @@ default = []
 [dependencies]
 backtrace = "0.3.13"
 bytemuck = "1.4.1"
-chrono = { version = "0.4.0", features = ["serde", "clock"], default-features = false }
+chrono = { version = "0.4.0", features = [
+  "serde",
+  "clock",
+], default-features = false }
 fern = "0.6.0"
-livesplit-core = { git = "https://github.com/LiveSplit/livesplit-core", features = ["software-rendering", "font-loading", "auto-splitting"] }
+livesplit-core = { git = "https://github.com/LiveSplit/livesplit-core", features = [
+  "software-rendering",
+  "font-loading",
+  "networking",
+  "auto-splitting",
+] }
 log = { version = "0.4.6", features = ["serde"] }
 minifb = "0.20.0"
 serde = { version = "1.0.85", features = ["derive"] }

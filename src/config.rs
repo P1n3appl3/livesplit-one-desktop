@@ -80,7 +80,22 @@ impl Default for Window {
 impl Config {
     pub fn parse(path: impl AsRef<Path>) -> Option<Config> {
         let buf = fs::read(path).ok()?;
-        serde_yaml::from_slice(&buf).ok()
+        let conf = serde_yaml::from_slice(&buf);
+        match conf {
+            Ok(c) => Some(c),
+            Err(e) => {
+                if let Some(loc) = e.location() {
+                    println!(
+                        "Invalid config file: error at line {} column {}",
+                        loc.line(),
+                        loc.column()
+                    );
+                } else {
+                    println!("Error loading config file");
+                }
+                None
+            }
+        }
     }
 
     pub fn parse_run(&self) -> Option<Run> {
@@ -103,6 +118,14 @@ impl Config {
 
     pub fn is_game_time(&self) -> bool {
         self.general.timing_method == Some(TimingMethod::GameTime)
+    }
+
+    pub fn maybe_load_auto_splitter(&self, runtime: &auto_splitting::Runtime) {
+        if let Some(auto_splitter) = &self.general.auto_splitter {
+            if let Ok(buf) = fs::read(auto_splitter) {
+                runtime.load_script(buf).unwrap();
+            }
+        }
     }
 
     pub fn parse_layout(&self) -> Option<Layout> {
@@ -185,10 +208,10 @@ impl Config {
             self.window.width,
             self.window.height,
             minifb::WindowOptions {
-                // borderless: true,
-                resize: true,
+                borderless: true,
+                resize: false,
                 topmost: self.window.always_on_top,
-                // transparency: self.window.transparency,
+                transparency: self.window.transparency,
                 ..Default::default()
             },
         )?;

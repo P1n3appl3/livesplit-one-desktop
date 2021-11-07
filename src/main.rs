@@ -25,7 +25,8 @@ fn main() {
     let auto_splitter = auto_splitting::Runtime::new(timer.clone());
     config.maybe_load_auto_splitter(&auto_splitter);
 
-    let _hotkey_system = config.create_hotkey_system(timer.clone());
+    let mut hotkey_system = HotkeySystem::new(timer.clone()).unwrap();
+    config.configure_hotkeys(&mut hotkey_system);
 
     let mut layout = config.parse_layout_or_default();
 
