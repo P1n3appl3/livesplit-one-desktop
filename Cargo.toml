@@ -15,10 +15,10 @@ chrono = { version = "0.4.0", features = [
   "clock",
 ], default-features = false }
 fern = "0.6.0"
-livesplit-core = { git = "https://github.com/LiveSplit/livesplit-core", features = [
+livesplit-core = { path = "../livesplit-core/", features = [
   "software-rendering",
   "font-loading",
-  "networking",
+  # "networking",
   "auto-splitting",
 ] }
 log = { version = "0.4.6", features = ["serde"] }
@@ -38,9 +38,5 @@ overflow-checks = false
 opt-level = 0
 
 [profile.release]
-lto = true
+lto = "thin"
 panic = "abort"
-# debug = true
-
-[profile.release.build-override]
-opt-level = 0

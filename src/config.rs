@@ -9,7 +9,7 @@ use livesplit_core::{
 use serde::Deserialize;
 use std::{
     fs::{self, File},
-    io::{BufReader, BufWriter, Seek, SeekFrom},
+    io::{BufReader, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -100,8 +100,9 @@ impl Config {
 
     pub fn parse_run(&self) -> Option<Run> {
         let path = self.general.splits.clone()?;
-        let file = BufReader::new(File::open(&path).ok()?);
-        let mut run = composite::parse(file, Some(path), true).ok()?.run;
+        let mut run = composite::parse(&fs::read(&path).ok()?, Some(path), true)
+            .ok()?
+            .run;
         run.fix_splits();
         Some(run)
     }
@@ -122,8 +123,8 @@ impl Config {
 
     pub fn maybe_load_auto_splitter(&self, runtime: &auto_splitting::Runtime) {
         if let Some(auto_splitter) = &self.general.auto_splitter {
-            if let Ok(buf) = fs::read(auto_splitter) {
-                runtime.load_script(buf).unwrap();
+            if let Err(e) = runtime.load_script_blocking(auto_splitter.clone()) {
+                dbg!(e);
             }
         }
     }
@@ -135,7 +136,9 @@ impl Config {
             return Some(Layout::from_settings(settings));
         }
         file.seek(SeekFrom::Start(0)).ok()?;
-        layout::parser::parse(file).ok()
+        let mut s = String::new();
+        file.read_to_string(&mut s).ok()?;
+        layout::parser::parse(&s).ok()
     }
 
     pub fn parse_layout_or_default(&self) -> Layout {
@@ -155,15 +158,17 @@ impl Config {
             timer.set_current_timing_method(TimingMethod::GameTime);
         }
         if let Some(comparison) = &self.general.comparison {
-            timer.set_current_comparison(comparison).ok();
+            timer.set_current_comparison(comparison.as_str()).ok();
         }
     }
 
     pub fn save_splits(&self, timer: &Timer) {
         if let Some(path) = &self.general.splits {
             // FIXME: Don't ignore not being able to save.
-            if let Ok(file) = File::create(path) {
-                save_timer(timer, BufWriter::new(file)).ok();
+            if let Ok(mut file) = File::create(path) {
+                let mut s = String::new();
+                save_timer(timer, &mut s).ok();
+                file.write_all(s.as_bytes()).ok();
             }
         }
     }
@@ -180,8 +185,7 @@ impl Config {
                 fern::Dispatch::new()
                     .format(|out, message, record| {
                         out.finish(format_args!(
-                            "{}[{}][{}] {}",
-                            chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                            "[{}][{}] {}",
                             record.target(),
                             record.level(),
                             message
@@ -223,14 +227,6 @@ impl Config {
 
     pub fn build_marker_client(&self) -> stream_markers::Client {
         stream_markers::Client::new(self.connections.twitch.as_deref())
-    }
-
-    pub fn maybe_load_auto_splitter(&self, runtime: &auto_splitting::Runtime) {
-        if let Some(auto_splitter) = &self.general.auto_splitter {
-            if let Err(e) = runtime.load_script(auto_splitter.clone()) {
-                log::error!("Auto Splitter failed to load: {}", ErrorChain(&e));
-            }
-        }
     }
 }
 

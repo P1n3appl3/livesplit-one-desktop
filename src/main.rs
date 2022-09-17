@@ -18,15 +18,16 @@ fn main() {
 
     let run = config.parse_run_or_default();
     let timer = Timer::new(run).unwrap().into_shared();
-    config.configure_timer(&mut timer.write());
+    config.configure_timer(&mut timer.write().unwrap());
 
     let mut markers = config.build_marker_client();
 
     let auto_splitter = auto_splitting::Runtime::new(timer.clone());
     config.maybe_load_auto_splitter(&auto_splitter);
 
-    let mut hotkey_system = HotkeySystem::new(timer.clone()).unwrap();
-    config.configure_hotkeys(&mut hotkey_system);
+    let _hotkey_system = config.create_hotkey_system(timer.clone()).unwrap();
+    // let mut hotkey_system = HotkeySystem::new(timer.clone()).unwrap();
+    // config.configure_hotkeys(&mut hotkey_system);
 
     let mut layout = config.parse_layout_or_default();
 
@@ -46,13 +47,13 @@ fn main() {
         }
 
         if window.is_key_pressed(Key::Enter, KeyRepeat::No) {
-            config.save_splits(&timer.read());
+            config.save_splits(&timer.read().unwrap());
         }
 
         let (width, height) = window.get_size();
         if width != 0 && height != 0 {
             {
-                let timer = timer.read();
+                let timer = timer.read().unwrap();
                 markers.tick(&timer);
                 layout.update_state(&mut layout_state, &timer.snapshot());
             }

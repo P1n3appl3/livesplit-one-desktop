@@ -1,10 +1,9 @@
 general:
-  splits: /home/joseph/Games/speedrunning/climb/Celeste.lss
-  layout: /home/joseph/Games/speedrunning/climb/Celeste.ls1l
+  splits: /home/joseph/Games/speedrunning/climb/splits.lss
+  layout: /home/joseph/Games/speedrunning/climb/layout.ls1l
   comparison: Average Segments
   timing-method: GameTime
   auto-splitter: /home/joseph/Games/speedrunning/climb/auto-splitter/target/wasm32-unknown-unknown/release/auto_splitter.wasm
-  # auto-splitter: /home/joseph/Games/speedrunning/celeste/celeste-auto-splitter/target/wasm32-unknown-unknown/release/celeste.wasm
 
 window:
   always-on-top: true
